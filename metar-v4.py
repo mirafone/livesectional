@@ -185,6 +185,7 @@ dim_value = config.dim_value            #Percentage of brightness to dim all oth
 usewipes = config.usewipes              #0 = No, 1 = Yes, use wipes. Defined by configurator
 rgb_grb = config.rgb_grb                #1 = RGB color codes. 0 = GRB color codes. Populate color codes below with normal RGB codes and script will change if necessary
 max_wind_speed = config.max_wind_speed  #In Knots. Any speed at or above will flash the LED for the appropriate airport if hiwindblink=1
+heat_temp_c = config.heat_temp_c        #Celsius threshold (~100F) at/above which VFR shows color_vfr_hot instead of color_vfr
 update_interval = config.update_interval        #Number of MINUTES between FAA updates - 15 minutes is a good compromise. A pushbutton switch can be used to force update.
 dimmed_value = config.dimmed_value      #Range is 0 - 255. This sets the value of LED brightness when light sensor detects low ambient light. Independent of homeport dimming.
 bright_value = config.bright_value      #Range is 0 - 255. This sets the value of LED brightness when light sensor detects high ambient light
@@ -197,6 +198,7 @@ autorun = config.autorun                # Check to be sure Autorun on reboot is 
 # Set Colors in RGB. Change numbers in paranthesis as desired. The order should be (Red,Green,Blue). This setup works for the WS2812 model of LED strips.
 # WS2811 strips uses GRB colors, so change "rgb_grb = 0" above if necessary. Range is 0-255. (https://www.rapidtables.com/web/color/RGB_Color.html)
 color_vfr = config.color_vfr            #Full bright Green for VFR
+color_vfr_hot = config.color_vfr_hot    #Orange for VFR when temp >= heat_temp_c
 color_mvfr = config.color_mvfr          #Full bright Blue for MVFR
 color_ifr = config.color_ifr            #Full bright Red for IFR
 color_lifr = config.color_lifr          #Full bright Magenta for LIFR
@@ -552,6 +554,7 @@ while (outerloop):
     stationiddict = {}
     windsdict = {"":""}
     wxstringdict = {"":""}
+    tempsdict = {}          #Station temperature (Celsius) dictionary, used for VFR heat-orange color
 
     #Call script and execute desired wipe(s) while data is being updated.
     if usewipes ==  1 and toggle_sw != -1:
@@ -1366,6 +1369,15 @@ while (outerloop):
             else:
                 wxstring = metar.find('wx_string').text
 
+            #grab temperature (Celsius) from returned FAA data, used for VFR heat-orange color
+            if metar.find('temp_c') is None: #if temp is blank, then bypass
+                tempc = None
+            else:
+                try:
+                    tempc = float(metar.find('temp_c').text)
+                except (TypeError, ValueError):
+                    tempc = None
+
             #Check for duplicate airport identifier and skip if found, otherwise store in dictionary. covers for dups in "airports" file
             if stationId in stationiddict:
                 logger.info(stationId + " Duplicate, only saved first metar category")
@@ -1381,6 +1393,11 @@ while (outerloop):
                 logger.info(stationId + " Duplicate, only saved the first weather")
             else:
                 wxstringdict[stationId] = wxstring #build weather dictionary
+
+            if stationId in tempsdict:
+                logger.info(stationId + " Duplicate, only saved the first temp")
+            else:
+                tempsdict[stationId] = tempc #build temperature dictionary
         logger.info("Decoded METAR Data for Display")
         
         # Debug: Show which airports from config have weather data vs which don't
@@ -1595,6 +1612,7 @@ while (outerloop):
                 airportwinds = windsdict.get(airportcode,0) #Pull the winds from the dictionary.
                 airportwx_long = wxstringdict.get(airportcode,"NONE") #Pull the weather reported for the airport from dictionary.
                 airportwx = airportwx_long.split(" ",1)[0] #Grab only the first parameter of the weather reported.
+                airporttemp = tempsdict.get(airportcode, None) #Pull the temperature (C) reported for the airport from dictionary.
 
                 #debug print out
                 if metar_taf_mos == 0:
@@ -1702,7 +1720,10 @@ while (outerloop):
                 #Check flight category and set the appropriate color to display
                 if  flightcategory != "NONE":
                     if flightcategory == "VFR":     #Visual Flight Rules
-                        color = color_vfr
+                        if airporttemp is not None and airporttemp >= heat_temp_c: #Extreme heat override - orange instead of green
+                            color = color_vfr_hot
+                        else:
+                            color = color_vfr
                     elif flightcategory == "MVFR":  #Marginal Visual Flight Rules
                         color = color_mvfr
                     elif flightcategory == "IFR":   #Instrument Flight Rules

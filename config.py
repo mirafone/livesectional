@@ -4,6 +4,7 @@ autorun = 1
 LED_COUNT = 183
 legend = 1
 max_wind_speed = 15
+heat_temp_c = 43        #Celsius threshold (~100F) at/above which VFR shows orange instead of green
 update_interval = 15
 metar_age = 2.5
 data_sw0 = 1
@@ -36,6 +37,7 @@ rev_rgb_grb = []
 dimmed_value = 30
 bright_value = 255
 color_vfr = (0, 255, 0)
+color_vfr_hot = (255, 140, 0)   #VFR + temp >= heat_temp_c shows this orange instead of color_vfr
 color_mvfr = (0, 0, 255)
 color_ifr = (255, 0, 0)
 color_lifr = (255, 0, 255)
