@@ -185,7 +185,7 @@ dim_value = config.dim_value            #Percentage of brightness to dim all oth
 usewipes = config.usewipes              #0 = No, 1 = Yes, use wipes. Defined by configurator
 rgb_grb = config.rgb_grb                #1 = RGB color codes. 0 = GRB color codes. Populate color codes below with normal RGB codes and script will change if necessary
 max_wind_speed = config.max_wind_speed  #In Knots. Any speed at or above will flash the LED for the appropriate airport if hiwindblink=1
-heat_temp_c = config.heat_temp_c        #Celsius threshold (~100F) at/above which VFR shows color_vfr_hot instead of color_vfr
+heat_temp_c = config.heat_temp_c        #Celsius threshold (~98.6F) at/above which VFR shows color_vfr_hot instead of color_vfr
 update_interval = config.update_interval        #Number of MINUTES between FAA updates - 15 minutes is a good compromise. A pushbutton switch can be used to force update.
 dimmed_value = config.dimmed_value      #Range is 0 - 255. This sets the value of LED brightness when light sensor detects low ambient light. Independent of homeport dimming.
 bright_value = config.bright_value      #Range is 0 - 255. This sets the value of LED brightness when light sensor detects high ambient light
